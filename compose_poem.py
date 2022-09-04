@@ -20,7 +20,8 @@ import tensorflow as tf
 from poems.model import rnn_model
 from poems.poems import process_poems
 import numpy as np
-
+import timeit
+tf.compat.v1.disable_eager_execution()
 start_token = 'B'
 end_token = 'E'
 model_dir = './model/'
@@ -39,19 +40,19 @@ def to_word(predict, vocabs):
         return vocabs[sample]
 
 
-def gen_poem(begin_word):
+def gen_poem():
     batch_size = 1
     print('## loading corpus from %s' % model_dir)
     poems_vector, word_int_map, vocabularies = process_poems(corpus_file)
 
-    input_data = tf.placeholder(tf.int32, [batch_size, None])
+    input_data = tf.compat.v1.placeholder(tf.int32, [batch_size, None])
 
     end_points = rnn_model(model='lstm', input_data=input_data, output_data=None, vocab_size=len(
         vocabularies), rnn_size=128, num_layers=2, batch_size=64, learning_rate=lr)
 
-    saver = tf.train.Saver(tf.global_variables())
-    init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-    with tf.Session() as sess:
+    saver = tf.compat.v1.train.Saver(tf.compat.v1.global_variables())
+    init_op = tf.group(tf.compat.v1.global_variables_initializer(), tf.compat.v1.local_variables_initializer())
+    with tf.compat.v1.Session() as sess:
         sess.run(init_op)
 
         checkpoint = tf.train.latest_checkpoint(model_dir)
@@ -61,7 +62,7 @@ def gen_poem(begin_word):
 
         [predict, last_state] = sess.run([end_points['prediction'], end_points['last_state']],
                                          feed_dict={input_data: x})
-        word = begin_word or to_word(predict, vocabularies)
+        word = to_word(predict, vocabularies)
         poem_ = ''
 
         i = 0
@@ -74,19 +75,19 @@ def gen_poem(begin_word):
             [predict, last_state] = sess.run([end_points['prediction'], end_points['last_state']],
                                              feed_dict={input_data: x, end_points['initial_state']: last_state})
             word = to_word(predict, vocabularies)
+        sentence = ""
+        poem_sentences = poem_.split('。')
+        for s in poem_sentences:
+            if s != '' and len(s) > 10:
+                sentence += s + '。'
+                print(s + '。')
+        return sentence
 
-        return poem_
 
-
-def pretty_print_poem(poem_):
-    poem_sentences = poem_.split('。')
-    for s in poem_sentences:
-        if s != '' and len(s) > 10:
-            print(s + '。')
 
 if __name__ == '__main__':
-    begin_char = input('## （输入 quit 退出）请输入第一个字 please input the first character: ')
-    if begin_char == 'quit':
-        exit() 
-    poem = gen_poem(begin_char)
-    pretty_print_poem(poem_=poem)
+
+    start = timeit.default_timer()
+    poem = gen_poem()
+    stop = timeit.default_timer()
+    print('Time: ', stop - start)
