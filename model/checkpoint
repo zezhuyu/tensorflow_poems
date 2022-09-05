@@ -1,2 +1,2 @@
-model_checkpoint_path: "/YOURPATH/tensorflow_poems_v2/model/poems-48"
-all_model_checkpoint_paths: "/YOURPATH/tensorflow_poems_v2/model/poems-48"
+model_checkpoint_path: "./poems-48"
+all_model_checkpoint_paths: "./poems-48"
