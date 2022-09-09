@@ -80,14 +80,10 @@ def gen_poem():
         for s in poem_sentences:
             if s != '' and len(s) > 10:
                 sentence += s + '。'
-                print(s + '。')
         return sentence
 
 
 
 if __name__ == '__main__':
-
-    start = timeit.default_timer()
     poem = gen_poem()
-    stop = timeit.default_timer()
-    print('Time: ', stop - start)
+    print(poem)
